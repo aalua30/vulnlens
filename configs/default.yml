@@ -1,0 +1,126 @@
+# VulnLens settings. Secrets come from env: ANTHROPIC_API_KEY, TAVILY_API_KEY, GITHUB_TOKEN (optional),
+# NVD_API_KEY (optional, raises NVD rate limits), OLLAMA_HOST (optional).
+
+llms:
+  default:           # main analysis model
+    provider: anthropic
+    model: claude-opus-5-5
+    effort: high
+    max_tokens: 16000
+  fast:              # cheaper model, e.g. for the VEX categorizer's reasoning text
+    provider: anthropic
+    model: claude-haiku-5-5
+    effort: medium
+    max_tokens: 8000
+  local:             # fully local via Ollama (pick a tool-calling model you have pulled)
+    provider: ollama
+    model: qwen3.5:4b    # tool-calling model; llama3.2:latest is lighter if RAM is very tight
+    temperature: 0
+    reasoning: false     # disable thinking: much faster on CPU
+    num_ctx: 8192        # 16k+ needs more free RAM; larger prompts get truncated at 8k
+    max_tokens: 4000
+    timeout: 1800        # CPU inference can take minutes per call
+    max_concurrency: 1   # one request at a time (avoids multiple KV caches / OOM); raise with OLLAMA_NUM_PARALLEL
+  remote:            # Ollama on another host (behind nginx on port 80)
+    provider: ollama
+    base_url: http://192.168.6.115
+    model: qwen3.5:9b
+    temperature: 0
+    reasoning: false
+    num_ctx: 16384
+    max_tokens: 4000
+    timeout: 1800
+    max_concurrency: 2
+  deepseek:          # DeepSeek hosted API (OpenAI-compatible); needs DEEPSEEK_API_KEY and `pip install -e '.[deepseek]'`
+    provider: deepseek
+    model: deepseek-flash      # DeepSeek-V4.1-Flash; "deepseek-v4-pro" for the larger model
+    temperature: 0
+    max_tokens: 8000
+    timeout: 600
+    max_concurrency: 4
+    max_react_steps: {cve_researcher: 14, container_web: 10, container_fs: 20, exploitability: 25}
+  glm:               # Z.ai GLM via the official zai-sdk; needs ZAI_API_KEY and `pip install -e '.[zai]'`
+    provider: zai
+    model: glm-5.3-flash
+    temperature: 0
+    max_tokens: 8000
+    reasoning: true            # glm-5.3-flash always thinks (false is rejected); other GLM models may allow off
+    effort: high               # reasoning_effort; glm-5.3-flash accepts only low | high | max
+    timeout: 600
+    max_concurrency: 4
+    max_react_steps: {cve_researcher: 14, container_web: 10, container_fs: 20, exploitability: 25}
+  cloud:             # Ollama cloud model (runs remotely via the local Ollama daemon; needs `ollama signin`)
+    provider: ollama
+    model: gemma4:cloud
+    temperature: 0
+    num_ctx: 65536
+    max_tokens: 8000
+    max_concurrency: 4   # inference is remote, so local RAM is not the limit
+    timeout: 600
+
+# Which profile each agent uses. Override per request with options.llm_profile / options.llm_overrides,
+# or on the CLI with --llm local.
+# Currently DeepSeek for everything (needs DEEPSEEK_API_KEY); set back to `default` to use Claude.
+agents:
+  cve_researcher: deepseek
+  container_analyzer: deepseek
+  exploitability: deepseek
+  vex_categorizer: deepseek
+  live_verifier: deepseek
+  reflector: deepseek        # writes proposed playbooks from run signals (vulnlens learn)
+
+cache_dir: ~/.cache/vulnlens
+
+# Local LLM response cache: an identical request (same prompt, model params and tools) is answered locally
+# without calling the provider, so re-runs only pay from the first ReAct step that differs.
+# Skipped for agents in --refresh, with --no-cache, and for the agents listed in exclude_agents.
+# Check it with `vulnlens llm-cache info`; empty it with `vulnlens llm-cache clear`.
+# Env overrides: VULNLENS_LLM_CACHE=valkey|redis|sqlite|memory|none, VULNLENS_VALKEY_URL=redis://host:6379/0
+llm_cache:
+  backend: valkey            # local valkey.service (dnf install valkey); sqlite needs no service
+  redis_url: redis://127.0.0.1:6379/0   # add user:password@ if you set requirepass / ACLs
+  prefix: "vulnlens:llm"     # key namespace, so the server can be shared
+  ttl: 2592000               # 30 days; null = keep forever
+  fallback: sqlite           # valkey unreachable -> <cache_dir>/llm_cache.sqlite (none = fail instead)
+  exclude_agents: [live_verifier]   # live probes must always reflect the current state
+output_dir: ./output
+
+# Self-evolving harness: approved playbooks (Hermes-compatible SKILL.md) are injected into agent prompts.
+# Loop: vulnlens feedback <run> <CVE> ... -> vulnlens learn <run> -> vulnlens skills diff|replay|approve <name>.
+# Learned playbooks never go live by themselves: they wait in <dir>/pending until a gold-set replay passes and
+# you approve them. Point Hermes Agent at <dir>/active via skills.external_dirs to share them.
+skills:
+  enabled: true
+  # dir: ~/.cache/vulnlens/skills
+  max_chars: 6000            # playbook text inlined per agent call; the rest is reachable via skill_view
+  max_skills: 6
+  auto_learn: false          # true: run the reflector after every run (still only stages pending proposals)
+  require_replay: true
+  gold_set: eval/gold/vulnlens_local.jsonl
+  replay_repeats: 2
+
+max_react_steps:
+  cve_researcher: 8
+  container_web: 6
+  container_fs: 14
+  exploitability: 20
+  live_posture: 16     # live verifier: target-level posture checks
+  live_verify: 10      # live verifier: per-CVE re-check of a static verdict
+max_tool_output_chars: 12000
+
+# Relaxed VEX mode: EXPLOITABLE verdicts with confidence below this and no reachability chain
+# become not_affected/code_not_reachable.
+relaxed_confidence_threshold: 0.6
+
+# Live verification (options.live_verification + target.runtime, or `vulnlens run --container NAME`):
+# read-only probes against the running workload. Commands must fully match one allowlist regex; omit
+# `allowlist` to keep the built-in list (vulnlens.config.DEFAULT_ALLOWLIST), or replace it here.
+live_probes:
+  default_credentials: ["guest:guest"]   # well-known defaults the verifier may try on the target's own HTTP APIs
+  timeout: 20
+  verify_verdicts: [CONDITIONALLY_EXPLOITABLE, EXPLOITABLE, MITIGATED, ENVIRONMENT_ISOLATED, NOT_REACHABLE]
+
+crane_bin: crane
+container_cli_fallbacks: [podman, docker]
+http_timeout: 30
+allow_private_fetch: false

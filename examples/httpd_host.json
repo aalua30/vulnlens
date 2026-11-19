@@ -1,0 +1,27 @@
+{
+  "vulnerabilities": [
+    {
+      "vuln_id": "CVE-2026-119618",
+      "package_hint": "httpd"
+    },
+    {
+      "vuln_id": "CVE-2026-106023",
+      "package_hint": "httpd"
+    },
+    {
+      "vuln_id": "CVE-2026-109163",
+      "package_hint": "httpd"
+    }
+  ],
+  "target": {
+    "kind": "host",
+    "filesystem_path": "/",
+    "runtime": {
+      "engine": "local"
+    },
+    "deployment_notes": "Fedora 44 host running the distro httpd package (systemd unit httpd.service) with stock configuration, listening on port 81 (Listen 81). No application deployed: only the default welcome page. No TLS (mod_ssl not installed)."
+  },
+  "options": {
+    "live_verification": true
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "image_name": "docker.io/library/python",
+  "image_tag": "3.12-slim",
+  "vulnerabilities": ["CVE-2024-6345", "CVE-2023-45803"]
+}

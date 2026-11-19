@@ -1,0 +1,268 @@
+<title>{{ o.target }} VEX Assessment</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: single advisory column; summary strip, actions, exposure, live checks, findings ledger. */
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #18202b; --muted: #5a6574; --line: #dde2e8;
+  --accent: #1f5f8b; --bad: #b4232c; --bad-bg: #fbe9ea; --warn: #9a5b00; --warn-bg: #fdf1dc;
+  --ok: #2e6b4f; --ok-bg: #e5f2ea; --unk: #5b4a8a; --unk-bg: #eeeaf7; --code-bg: #eef1f5;
+  --s1: #3d7ea6; --s2: #8fb3cc; --s3: #c7d6e2; --s4: #6c8a9e; --s5: #a8a29e;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11161d; --surface: #18202a; --ink: #e3e8ee; --muted: #9aa6b4; --line: #2a3542;
+    --accent: #7db4dc; --bad: #f08a8f; --bad-bg: #3a1c20; --warn: #f0b860; --warn-bg: #362812;
+    --ok: #7fc8a2; --ok-bg: #16302a; --unk: #b9a6ef; --unk-bg: #2a2440; --code-bg: #222c38;
+    --s1: #5d9cc4; --s2: #3f6f8f; --s3: #2c4a60; --s4: #7f9bb0; --s5: #6b6764;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11161d; --surface: #18202a; --ink: #e3e8ee; --muted: #9aa6b4; --line: #2a3542;
+  --accent: #7db4dc; --bad: #f08a8f; --bad-bg: #3a1c20; --warn: #f0b860; --warn-bg: #362812;
+  --ok: #7fc8a2; --ok-bg: #16302a; --unk: #b9a6ef; --unk-bg: #2a2440; --code-bg: #222c38;
+  --s1: #5d9cc4; --s2: #3f6f8f; --s3: #2c4a60; --s4: #7f9bb0; --s5: #6b6764;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 40px; }
+h1, h2 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; overflow-wrap: anywhere; }
+h2 { font-size: 22px; font-weight: 700; }
+h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 6px; font-weight: 600; }
+p { margin: 0; max-width: 72ch; }
+a { color: var(--accent); }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+header { display: grid; gap: 12px; }
+.lede { color: var(--muted); font-size: 16px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); margin: 4px 0 0; padding: 0; list-style: none; }
+.meta b { color: var(--ink); font-weight: 500; }
+section { display: grid; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 2px; }
+.stat .n { font-family: var(--f-display); font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .l { font-size: 13px; color: var(--muted); }
+.stat.bad .n { color: var(--bad); } .stat.warn .n { color: var(--warn); } .stat.ok .n { color: var(--ok); } .stat.unknown .n { color: var(--unk); }
+.bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; gap: 2px; }
+.seg-code_not_reachable { background: var(--s1); } .seg-requires_environment, .seg-requires_configuration, .seg-requires_dependency { background: var(--s4); }
+.seg-code_not_present { background: var(--s2); } .seg-false_positive { background: var(--s5); }
+.seg-perimeter_protected, .seg-compiler_protected, .seg-mitigating_control_protected { background: var(--s3); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--muted); }
+.legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.actions { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: a; }
+.actions li { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px 14px 52px; position: relative; counter-increment: a; }
+.actions li::before { content: counter(a); position: absolute; left: 16px; top: 13px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent); color: var(--surface); font: 600 13px/24px var(--f-mono); text-align: center; }
+.actions b { display: block; margin-bottom: 2px; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.port { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.findings { display: grid; gap: 8px; }
+.finding { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; border-left-width: 4px; }
+.f-bad { border-left-color: var(--bad); } .f-warn { border-left-color: var(--warn); } .f-ok { border-left-color: var(--line); } .f-unknown { border-left-color: var(--unk); }
+.finding summary { cursor: pointer; display: grid; grid-template-columns: 150px minmax(90px, 160px) 90px auto 1fr 40px; gap: 6px 12px; align-items: center; padding: 11px 14px; list-style: none; }
+.finding summary::-webkit-details-marker { display: none; }
+.finding summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.finding[open] summary { border-bottom: 1px solid var(--line); }
+.f-id { font-family: var(--f-mono); font-weight: 500; font-size: 13.5px; overflow-wrap: anywhere; }
+.f-pkg { font-family: var(--f-mono); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.f-just { font-size: 13px; color: var(--muted); }
+.f-conf { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; justify-self: start; }
+.pill-bad { background: var(--bad-bg); color: var(--bad); } .pill-warn { background: var(--warn-bg); color: var(--warn); }
+.pill-ok { background: var(--ok-bg); color: var(--ok); } .pill-unknown { background: var(--unk-bg); color: var(--unk); }
+.sev { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sev-critical, .sev-high { color: var(--bad); } .sev-medium, .sev-moderate { color: var(--warn); }
+.f-body { padding: 4px 18px 18px; }
+.f-body > p { margin-top: 6px; }
+.f-sum { font-weight: 500; }
+.kv { display: flex; flex-wrap: wrap; gap: 6px 28px; margin: 14px 0 0; }
+.kv dt { font-size: 12px; color: var(--muted); } .kv dd { margin: 0; font-size: 14px; }
+.chain, .conds { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 14px; }
+.verify { margin-top: 16px; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; background: var(--bg); }
+.verify h4 { margin-top: 0; }
+.verify table { font-size: 13px; }
+.holds-yes { color: var(--bad); font-weight: 600; } .holds-no { color: var(--ok); font-weight: 600; } .holds-na { color: var(--muted); }
+.checks { display: grid; gap: 8px; }
+.check { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; display: grid; gap: 4px; }
+.check-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+.check-head b { font-weight: 600; }
+.check p { font-size: 14px; color: var(--muted); }
+.check .rec { color: var(--ink); }
+.probe-log { font-size: 13px; }
+.probe-log summary { cursor: pointer; color: var(--accent); }
+.probe-log pre { font-family: var(--f-mono); font-size: 12px; background: var(--code-bg); padding: 8px 10px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; margin: 4px 0 10px; }
+.note { color: var(--muted); font-size: 14px; }
+.caveats { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--muted); font-size: 14px; max-width: 80ch; }
+footer { font-size: 12.5px; color: var(--muted); font-family: var(--f-mono); border-top: 1px solid var(--line); padding-top: 14px; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  .finding summary { grid-template-columns: 1fr auto; }
+  .f-pkg, .f-just { grid-column: 1; } .sev, .f-conf { grid-column: 2; justify-self: end; }
+  .pill { grid-column: 1 / -1; }
+}
+</style>
+{%- macro pill(f) -%}
+{%- if f.band == "bad" %}<span class="pill pill-bad">Affected</span>
+{%- elif f.band == "warn" %}<span class="pill pill-warn">Not affected · borderline</span>
+{%- elif f.band == "unknown" %}<span class="pill pill-unknown">Undetermined</span>
+{%- else %}<span class="pill pill-ok">Not affected</span>{% endif -%}
+{%- endmacro -%}
+{%- macro holds(h) -%}
+{%- if h is none %}<span class="holds-na">untested</span>{% elif h %}<span class="holds-yes">holds</span>{% else %}<span class="holds-no">does not hold</span>{% endif -%}
+{%- endmacro -%}
+{%- macro finding(f, open) -%}
+<details class="finding f-{{ f.band }}" id="{{ f.anchor }}"{% if open %} open{% endif %}>
+  <summary>
+    <span class="f-id">{{ f.id }}</span>
+    <span class="f-pkg">{{ f.package }}</span>
+    {% if f.severity %}<span class="sev sev-{{ f.severity }}">{{ f.severity | title }}{% if f.cvss %} {{ f.cvss }}{% endif %}</span>{% else %}<span class="sev">n/a</span>{% endif %}
+    {{ pill(f) }}
+    <span class="f-just">{{ f.just_label }}{% if f.verification %} · live {{ f.verification.outcome }}{% endif %}</span>
+    <span class="f-conf" title="Confidence">{{ "%.2f" | format(f.confidence) }}</span>
+  </summary>
+  <div class="f-body">
+    {% if f.summary %}<p class="f-sum">{{ f.summary }}</p>{% endif %}
+    <dl class="kv">
+      <div><dt>VEX status</dt><dd><code>{{ f.status }}</code> / <code>{{ f.justification }}</code></dd></div>
+      <div><dt>Exploitability verdict</dt><dd><code>{{ f.verdict }}</code></dd></div>
+      <div><dt>Confidence</dt><dd>{{ "%.2f" | format(f.confidence) }}</dd></div>
+    </dl>
+    <h4>Reasoning</h4>
+    <p>{{ f.reasoning }}</p>
+    {% if f.conditions and f.verdict == "CONDITIONALLY_EXPLOITABLE" %}
+    <h4>Conditions{% if f.conditions_met is not none %} ({{ "met" if f.conditions_met else "not met" }}){% endif %}</h4>
+    <ul class="conds">{% for c in f.conditions %}<li>{{ c }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if f.chain %}<h4>Reachability chain</h4><ol class="chain">{% for s in f.chain %}<li><code>{{ s }}</code></li>{% endfor %}</ol>{% endif %}
+    {% if f.verification %}{% set v = f.verification %}
+    <div class="verify">
+      <h4>Live verification · {{ v.outcome }}{% if v.static_verdict and v.static_verdict.value != f.verdict %} · verdict changed from {{ v.static_verdict.value }}{% endif %}</h4>
+      <p>{{ v.summary }}</p>
+      {% if v.checks %}<div class="tbl-wrap" style="margin-top:10px"><table>
+        <thead><tr><th>Condition</th><th>Probe</th><th>Observed</th><th>Result</th></tr></thead>
+        <tbody>{% for c in v.checks %}<tr><td>{{ c.condition }}</td><td><code>{{ c.method }}</code></td><td>{{ c.observed }}</td><td>{{ holds(c.holds) }}</td></tr>{% endfor %}</tbody>
+      </table></div>{% endif %}
+    </div>
+    {% endif %}
+    {% if f.band == "bad" and f.remediation %}<h4>Remediation</h4><p>{{ f.remediation }}</p>{% endif %}
+    {% if f.errors %}<h4>Analysis issues</h4><ul class="conds">{% for e in f.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+</details>
+{%- endmacro %}
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">VEX assessment · OpenVEX statuses</span>
+  <h1>{{ o.target }}</h1>
+  {% if lede %}<p class="lede">{{ lede }}</p>{% endif %}
+  <ul class="meta">{% for k, v in meta %}<li>{{ k }} <b>{{ v }}</b></li>{% endfor %}</ul>
+</header>
+
+<section aria-labelledby="h-sum">
+  <h2 id="h-sum">Summary</h2>
+  <div class="stats">
+    <div class="stat"><span class="n">{{ n }}</span><span class="l">CVEs assessed</span></div>
+    <div class="stat bad"><span class="n">{{ n_affected }}</span><span class="l">Affected</span></div>
+    <div class="stat warn"><span class="n">{{ n_borderline }}</span><span class="l">Borderline (conditions not met)</span></div>
+    <div class="stat ok"><span class="n">{{ n_not_affected }}</span><span class="l">Not affected</span></div>
+    {% if n_unknown %}<div class="stat unknown"><span class="n">{{ n_unknown }}</span><span class="l">Undetermined</span></div>{% endif %}
+  </div>
+  {% if just_counts %}
+  <div class="bar" role="img" aria-label="Not-affected findings by justification">{% for k, c in just_counts %}<span class="seg seg-{{ k }}" style="flex:{{ c }}" title="{{ just_label.get(k, k) }}: {{ c }}"></span>{% endfor %}</div>
+  <ul class="legend">{% for k, c in just_counts %}<li><span class="sw seg-{{ k }}"></span>{{ just_label.get(k, k) }} <b>{{ c }}</b></li>{% endfor %}</ul>
+  {% endif %}
+</section>
+
+<section aria-labelledby="h-act">
+  <h2 id="h-act">Recommended actions</h2>
+  {% if actions %}
+  <ol class="actions">{% for a in actions %}<li><b>{{ a.title }}</b>{{ a.body }}</li>{% endfor %}</ol>
+  {% else %}
+  <p class="note">No action needed for the assessed CVEs.</p>
+  {% endif %}
+</section>
+
+{% if ports %}
+<section aria-labelledby="h-exp">
+  <h2 id="h-exp">Network exposure</h2>
+  {% if cr.network_exposure %}<p class="note">{{ cr.network_exposure }}{% if peers %} Peer containers on the same networks: {{ peers }}.{% endif %}</p>{% endif %}
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Port</th><th>Service</th><th>Published to host</th><th>Related findings</th></tr></thead>
+    <tbody>{% for p in ports %}<tr>
+      <td class="port">{{ p.port }}/{{ p.proto }}</td>
+      <td>{{ p.note or "–" }}</td>
+      <td>{% if p.published %}<code>{{ p.published | join(", ") }}</code>{% elif rr and rr.available %}No{% else %}Unknown{% endif %}</td>
+      <td>{% for f in p.findings %}<a href="#{{ f.anchor }}">{{ f.id }}</a>{% if not loop.last %}, {% endif %}{% else %}None{% endfor %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% if rr %}
+<section aria-labelledby="h-live">
+  <h2 id="h-live">Live checks on the running {{ "container" if rr.engine != "local" else "host" }}</h2>
+  {% if rr.available %}
+  <p class="note">{{ rr.summary }} {{ rr.probes | length }} read-only probes were run{% if verified %}; {{ verified | length }} CVE verdict{{ "s" if verified | length != 1 }} were re-checked live{% endif %}.</p>
+  <div class="checks">
+    {% for c in posture_issues + posture_other %}
+    <div class="check">
+      <div class="check-head">
+        {% if c.status == "issue" %}<span class="pill pill-bad">Issue</span>{% elif c.status == "ok" %}<span class="pill pill-ok">Passed</span>{% else %}<span class="pill pill-unknown">Info</span>{% endif %}
+        <b>{{ c.title }}</b>{% if c.status == "issue" and c.severity not in ("unknown", "none") %}<span class="sev sev-{{ c.severity }}">{{ c.severity | title }}</span>{% endif %}
+      </div>
+      {% if c.evidence %}<p>{{ c.evidence }}</p>{% endif %}
+      {% if c.status == "issue" and c.recommendation %}<p class="rec">{{ c.recommendation }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <details class="probe-log"><summary>Probe log ({{ rr.probes | length }})</summary>
+    {% for p in rr.probes %}<div><code>{{ p.tool }}</code> {{ p.args | tojson }}{% if not p.ok %} · refused or failed{% endif %}<pre>{{ p.output | truncate(1500) }}</pre></div>{% endfor %}
+  </details>
+  {% else %}
+  <p class="note">Live checks could not run: {{ rr.errors | join("; ") }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if attention %}
+<section aria-labelledby="h-attn">
+  <h2 id="h-attn">Findings that need attention</h2>
+  <div class="findings">{% for f in attention %}{{ finding(f, true) }}{% endfor %}</div>
+</section>
+{% endif %}
+
+{% if rest %}
+<section aria-labelledby="h-na">
+  <h2 id="h-na">Not affected</h2>
+  <p class="note">The vulnerable code is either absent or never reached. Expand a row for the evidence.</p>
+  <div class="findings">{% for f in rest %}{{ finding(f, false) }}{% endfor %}</div>
+</section>
+{% endif %}
+
+<section aria-labelledby="h-scope">
+  <h2 id="h-scope">Scope and limits</h2>
+  <ul class="caveats">
+    <li>{{ n }} CVE{{ "s" if n != 1 }} were assessed against {{ "an export of the target filesystem" if cr.kind == "container" else "the host filesystem" }}. CVEs not listed here were not analysed.</li>
+    <li>Verdicts come from an automated pipeline: deterministic package and version checks, then LLM-driven inspection of the filesystem. Confidence scores are the model's own estimate; confirm affected findings by hand before acting on them under change control.</li>
+    {% if rr and rr.available %}<li>Live checks used read-only, allowlisted commands and benign requests against the running target only. Their outputs were redacted for secrets.</li>
+    {% else %}<li>The running target was not probed, so runtime configuration (accounts, effective settings, reachability) is inferred from files only.</li>{% endif %}
+  </ul>
+</section>
+
+<footer>Generated by VulnLens · run {{ o.run_id }} · digest {{ o.digest[:40] }}{% if o.digest | length > 40 %}…{% endif %} · OpenVEX: openvex.json</footer>
+</div>

@@ -1,0 +1,25 @@
+# Live posture checks — {{ r.container or "local host" }}
+
+Engine `{{ r.engine }}` · reachable: **{{ r.available }}** · {{ r.checks | length }} checks, {{ r.probes | length }} probes
+
+{{ r.summary }}
+
+| Status | Severity | Check | Evidence | Recommendation |
+|---|---|---|---|---|
+{% for c in r.checks -%}
+| **{{ c.status }}** | {{ c.severity }} | {{ c.title | replace("|", "\\|") }} | {{ c.evidence | replace("|", "\\|") | replace("\n", " ") | truncate(400) }} | {{ c.recommendation | replace("|", "\\|") }} |
+{% endfor %}
+{% if r.facts %}## Runtime facts
+```json
+{{ r.facts | tojson(indent=1) }}
+```
+{% endif %}
+## Probe log
+{% for p in r.probes %}- `{{ p.tool }}` {{ p.args }}{% if not p.ok %} _(refused/failed)_{% endif %}
+```
+{{ p.output | truncate(1500) }}
+```
+{% endfor %}
+{% if r.errors %}## Issues
+{% for x in r.errors %}- {{ x }}
+{% endfor %}{% endif %}

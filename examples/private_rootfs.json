@@ -1,0 +1,12 @@
+{
+  "vulnerabilities": [{"vuln_id": "CVE-2024-24790"}],
+  "target": {
+    "kind": "container",
+    "image_name": "registry.internal/team/api",
+    "filesystem_path": "/srv/rootfs/api-2.3.1",
+    "image_config_path": "/srv/rootfs/api-2.3.1.config.json",
+    "private": true,
+    "deployment_notes": "Runs behind an internal API gateway; only port 8080 exposed in-cluster."
+  },
+  "options": {"skip_web_research": true, "relaxed_vex": true}
+}

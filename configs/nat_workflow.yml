@@ -1,0 +1,34 @@
+# NeMo Agent Toolkit config. Requires: pip install -e '.[nat]'
+#   nat serve --config_file configs/nat_workflow.yml --host 0.0.0.0 --port 8000
+#   nat eval  --config_file configs/nat_workflow.yml
+#
+# The workflow's agents use VulnLens' own LLM profiles (configs/default.yml): Claude or Ollama.
+
+general:
+  front_end:
+    _type: fastapi
+    # Blueprint-style endpoint paths (NAT also exposes /generate by default).
+    endpoints:
+      - path: /v1/workflow/async
+        method: POST
+        description: Submit an asynchronous vulnerability analysis job
+        function_name: vulnlens
+
+workflow:
+  _type: vulnlens
+  config_path: configs/default.yml
+  output_dir: ./output/nat
+  # llm_profile: local        # force Ollama for every agent
+
+eval:
+  general:
+    output_dir: ./output/nat_eval
+    max_concurrency: 1
+    dataset:
+      _type: json
+      # Point this at the Morpheus 25.06 benchmark converted to NAT's eval format:
+      #   [{"id": "...", "question": <PipelineInput JSON>, "answer": {"<CVE>": {"status": "...", "justification": "..."}}}]
+      file_path: data/eval/morpheus_25.06_nat.json
+  evaluators:
+    vex:
+      _type: vex_accuracy

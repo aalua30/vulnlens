@@ -1,0 +1,39 @@
+# CVE Research — {{ r.vuln_id }}
+
+{% if r.aliases %}**Aliases:** {{ r.aliases | join(", ") }}  {% endif %}
+**Severity:** {{ r.severity or "n/a" }}{% if r.cvss_score %} · CVSS {{ r.cvss_score }} (`{{ r.cvss_vector }}`){% endif %}
+{% if r.cwe %}· {{ r.cwe | join(", ") }}{% endif %}
+
+## Summary
+{{ r.summary or "_No summary._" }}
+
+{% if r.description %}## Description
+{{ r.description }}
+{% endif %}
+## Affected packages
+| Package | Ecosystem | Distro | Ranges | Fixed | Source |
+|---|---|---|---|---|---|
+{% for p in r.affected_packages -%}
+| {{ p.name }} | {{ p.ecosystem }} | {{ p.distro or "" }} | {{ p.ranges[:4] | map("tojson") | join("<br>") }} | {{ p.fixed_versions[:6] | join(", ") }} | {{ p.source }} |
+{% endfor %}
+## Vulnerable functions / APIs
+{% for f in r.vulnerable_functions %}- `{{ f }}`
+{% else %}_Not identified._
+{% endfor %}
+{% if r.vulnerable_files %}## Vulnerable files
+{% for f in r.vulnerable_files %}- `{{ f }}`
+{% endfor %}{% endif %}
+## Attack vector & preconditions
+**Vector:** {{ r.attack_vector or "n/a" }}  **Public exploit:** {{ r.exploit_available if r.exploit_available is not none else "unknown" }}
+
+{% for p in r.preconditions %}- {{ p }}
+{% endfor %}
+## Remediation
+{{ r.remediation or "_n/a_" }}
+
+## References
+{% for u in r.references %}- {{ u }}
+{% endfor %}
+{% if r.errors %}## Research issues
+{% for e in r.errors %}- {{ e }}
+{% endfor %}{% endif %}

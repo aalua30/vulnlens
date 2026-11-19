@@ -1,0 +1,10 @@
+{
+  "vulnerabilities": [
+    {"vuln_id": "CVE-2023-44487", "notes": "HTTP/2 rapid reset"},
+    {"vuln_id": "CVE-2024-6387", "package_hint": "openssh"},
+    {"vuln_id": "CVE-2023-4911", "package_hint": "glibc"}
+  ],
+  "target": {"kind": "container", "image_name": "docker.io/library/nginx", "image_tag": "1.25"},
+  "options": {"relaxed_vex": false, "max_parallel_cves": 3},
+  "output": {"dir": "./output"}
+}

@@ -1,0 +1,13 @@
+# Vulnerability Analysis — {{ o.target }}
+
+Run `{{ o.run_id }}` · digest `{{ o.digest }}` · type **{{ o.container_report.container_type }}**
+
+| CVE | Status | Justification | Verdict | Confidence | Risk | Report |
+|---|---|---|---|---|---|---|
+{% for r in o.results -%}
+| {{ r.vex.cve_id }} | **{{ r.vex.status.value }}** | {{ r.vex.justification.value }} | {{ r.vex.exploitability_verdict.value if r.vex.exploitability_verdict else "n/a" }} | {{ "%.2f" | format(r.vex.confidence) }} | {{ r.vex.risk_level }} | [vex]({{ r.vex.cve_id }}/vex.md) |
+{% endfor %}
+- Target analysis: [container_analysis.md](container_analysis.md)
+{% if o.runtime_report %}- Live posture checks: [runtime_verification.md](runtime_verification.md) ({{ o.runtime_report.checks | selectattr("status", "equalto", "issue") | list | length }} issues)
+{% endif %}- HTML report: [report.html](report.html)
+- Machine-readable: `summary.json`, `openvex.json`

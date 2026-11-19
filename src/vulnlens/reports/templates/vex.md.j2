@@ -1,0 +1,18 @@
+# VEX — {{ v.cve_id }} on {{ v.container }}
+
+| Status | Justification | Verdict | Confidence | Risk | Target type | Mode |
+|---|---|---|---|---|---|---|
+| **{{ v.status.value }}** | `{{ v.justification.value }}` | {{ v.exploitability_verdict.value if v.exploitability_verdict else "n/a" }} | {{ "%.2f" | format(v.confidence) }} | {{ v.risk_level }} | {{ v.container_type }} | {{ "relaxed" if v.relaxed_mode else "strict" }} |
+
+## Reasoning
+{{ v.reasoning }}
+
+## Decision trace
+| # | Node | Question | Answer | Evidence |
+|---|---|---|---|---|
+{% for s in v.decision_trace -%}
+| {{ s.step }} | {{ s.node }} | {{ s.question }} | **{{ s.answer }}** | {{ s.evidence | replace("|", "\\|") | replace("\n", " ") | truncate(200) }} |
+{% endfor %}
+## Reports
+{% for k, p in v.report_paths.items() %}- {{ k }}: `{{ p }}`
+{% endfor %}

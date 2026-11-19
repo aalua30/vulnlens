@@ -1,0 +1,69 @@
+.venv/
+output/
+__pycache__/
+*.egg-info/
+# ==========================================
+# Seguridad y Variables de Entorno
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets.*
+
+# ==========================================
+# Python y Entornos Virtuales
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# Claude Code (Anthropic CLI)
+# ==========================================
+# Ignora configuraciones locales personales, permisos temporales y caché de sesiones
+.claude/settings.local.json
+.claude/*.local.md
+.claude/cache/
+.claude/logs/
+.claude/todos/
+# Nota: Se permite subir .claude/settings.json y CLAUDE.md para compartir contexto del proyecto
+
+# ==========================================
+# Editores y Sistemas Operativos
+# ==========================================
+# VS Code / Cursor
+.vscode/
+!.vscode/extensions.json
+
+# Linux / macOS / Windows
+*~
+.directory
+.DS_Store
+Thumbs.db

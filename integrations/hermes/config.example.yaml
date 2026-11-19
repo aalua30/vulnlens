@@ -1,0 +1,20 @@
+# Merge into ~/.hermes/config.yaml to let Hermes Agent drive vulnlens.
+# vulnlens reads its own keys (TAVILY_API_KEY, DEEPSEEK_API_KEY, ZAI_API_KEY, ...) from this env.
+
+mcp_servers:
+  vulnlens:
+    command: "/home/oper/practice/agents/vulnerability-analysis-2/.venv/bin/vulnlens"
+    args: ["mcp"]
+    cwd: "/home/oper/practice/agents/vulnerability-analysis-2"   # configs/, examples/, output/ resolve here
+    timeout: 120
+    env:
+      VULNLENS_CONFIG: "/home/oper/practice/agents/vulnerability-analysis-2/configs/default.yml"
+      # VULNLENS_MCP_ALLOW_LIVE: "1"     # allow start_scan(live_verification=true); off by default
+    tools:
+      exclude: []                         # e.g. [learn] to keep the reflector CLI-only
+
+skills:
+  # Hermes reads vulnlens' approved playbooks (same SKILL.md format) and this triage skill.
+  external_dirs:
+    - "~/.cache/vulnlens/skills/active"
+    - "/home/oper/practice/agents/vulnerability-analysis-2/integrations/hermes/skills"

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vulnlens"
+version = "0.1.0"
+description = "LangGraph-based vulnerability exploitability & VEX analysis for containers and standard deployments (Claude or Ollama)."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "langgraph>=0.6",
+  "langchain-core>=0.3.70",
+  "langchain-anthropic>=0.3.18",
+  "langchain-ollama>=0.3.6",
+  "tavily-python>=0.7",
+  "httpx>=0.27",
+  "pydantic>=2.8",
+  "pyyaml>=6",
+  "jinja2>=3.1",
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "pyelftools>=0.31",
+  "packaging>=24",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+deepseek = ["langchain-deepseek>=1.0"]
+zai = ["zai-sdk>=0.2.3"]
+valkey = ["valkey>=6"]
+redis = ["redis>=5"]
+mcp = ["mcp>=2.3"]
+nat = ["nvidia-nat>=1.2", "nvidia-nat-langchain>=1.2"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+vulnlens = "vulnlens.cli:app"
+
+# Lets `nat serve` / `nat eval` discover the workflow + evaluator when the [nat] extra is installed.
+[project.entry-points."nat.components"]
+vulnlens = "vulnlens.nat_plugin.register"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vulnlens"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

@@ -1,0 +1,45 @@
+# Target Analysis — {{ c.target }}
+
+| Field | Value |
+|---|---|
+| Kind | {{ c.kind }} |
+| Digest | `{{ c.digest }}` |
+| Type | **{{ c.container_type }}** |
+| Distro | {{ c.distro.get("PRETTY_NAME") or c.distro }} |
+| User | {{ c.user or "root (default)" }} |
+| Exposed ports | {{ c.exposed_ports | join(", ") or "none declared" }} |
+| Inventory | {% for k, v in c.package_counts.items() %}{{ k }}={{ v }} {% endfor %} |
+
+## Summary
+{{ c.summary }}
+
+{% if c.purpose %}**Purpose:** {{ c.purpose }}{% endif %}
+
+{% if c.network_exposure %}**Network exposure:** {{ c.network_exposure }}{% endif %}
+
+## Entrypoints & services
+{% for e in c.entrypoints %}- **{{ e.kind }}** `{{ e.command }}` {% if e.source %}({{ e.source }}){% endif %}
+{% else %}_None identified._
+{% endfor %}
+## Key dependencies
+{% for d in c.key_dependencies %}- {{ d }}
+{% endfor %}
+{% if c.language_runtimes %}**Runtimes:** {{ c.language_runtimes | join(", ") }}{% endif %}
+
+## Security controls
+| Control | Status | Detail |
+|---|---|---|
+{% for s in c.security_controls -%}
+| {{ s.name }} | {{ s.status }} | {{ s.detail | replace("|", "\\|") | truncate(200) }} |
+{% endfor %}
+{% if c.web_findings %}## Public web findings
+{{ c.web_findings.summary }}
+
+{% for s in c.web_findings.sources %}- {{ s }}
+{% endfor %}{% endif %}
+{% if c.notes %}## Notes
+{% for n in c.notes %}- {{ n }}
+{% endfor %}{% endif %}
+{% if c.errors %}## Issues
+{% for e in c.errors %}- {{ e }}
+{% endfor %}{% endif %}

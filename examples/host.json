@@ -1,0 +1,9 @@
+{
+  "vulnerabilities": [{"vuln_id": "CVE-2024-3094", "package_hint": "xz"}],
+  "target": {
+    "kind": "host",
+    "filesystem_path": "/",
+    "deployment_notes": "Bare-metal Fedora workstation, sshd not exposed to the internet."
+  },
+  "options": {"skip_web_research": true}
+}
